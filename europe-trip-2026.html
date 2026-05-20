@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Europe Trip · May–Jun 2026</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: #f5f3ee;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 48px 24px 64px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: normal;
+      letter-spacing: 0.06em;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #777;
+      font-style: italic;
+      letter-spacing: 0.02em;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e2ddd5;
+      border-radius: 14px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    /* MAP */
+    #map {
+      height: 560px;
+      width: 100%;
+    }
+
+    .map-card {
+      margin-bottom: 28px;
+    }
+
+    .map-legend {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      padding: 14px;
+      font-size: 0.78rem;
+      color: #888;
+      border-top: 1px solid #e2ddd5;
+      background: #faf9f6;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-dash {
+      width: 28px;
+      height: 0;
+      border-top: 2px dashed #4a7fd4;
+    }
+
+    .legend-solid {
+      width: 28px;
+      height: 0;
+      border-top: 2.5px solid #2e9e5b;
+    }
+
+    /* City tooltips */
+    .city-tooltip {
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      font-family: 'Georgia', serif !important;
+      font-size: 11px !important;
+      padding: 2px 4px !important;
+      white-space: nowrap;
+    }
+
+    .city-tooltip::before {
+      display: none !important;
+    }
+
+    .city-tooltip .city-name {
+      font-weight: bold;
+      font-size: 12px;
+      display: block;
+      color: #1a3a5c;
+      text-shadow: 0 0 4px #fff, 0 0 8px #fff, 0 0 3px #fff;
+    }
+
+    .city-tooltip .city-meta {
+      color: #4a6a8a;
+      font-size: 10px;
+      margin-top: 0;
+      display: block;
+      text-shadow: 0 0 3px #fff, 0 0 6px #fff;
+    }
+
+    /* Leaflet attribution styling */
+    .leaflet-control-attribution {
+      font-size: 10px !important;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      padding: 13px 22px;
+      text-align: left;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #999;
+      background: #faf9f6;
+      border-bottom: 1px solid #e2ddd5;
+    }
+
+    tbody td {
+      padding: 13px 22px;
+      font-size: 0.93rem;
+      border-bottom: 1px solid #f0ece5;
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #fdf9f4; }
+
+    .date {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.85rem;
+      color: #888;
+      white-space: nowrap;
+    }
+
+    .route { font-weight: 500; }
+
+    .transport {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.85rem;
+      color: #555;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 2px 9px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .dash { color: #bbb; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Europe 2026</h1>
+    <p class="subtitle">May 25 – Jun 13 &nbsp;&middot;&nbsp; 8 cities &nbsp;&middot;&nbsp; 19 nights</p>
+  </header>
+
+  <!-- MAP -->
+  <div class="card map-card">
+    <div id="map"></div>
+    <div class="map-legend">
+      <div class="legend-item">
+        <div class="legend-dash"></div>
+        <span>Flight</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-solid"></div>
+        <span>Scenic train</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITINERARY TABLE -->
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Route</th>
+          <th>Transport</th>
+          <th>Nights</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="date">May 25</td>
+          <td class="route">SFO &rarr; London</td>
+          <td class="transport">Long-haul flight</td>
+          <td class="dash">&mdash;</td>
+        </tr>
+        <tr>
+          <td class="date">May 26–27</td>
+          <td class="route">London</td>
+          <td class="dash">&mdash;</td>
+          <td><span class="badge">2</span></td>
+        </tr>
+        <tr>
+          <td class="date">May 28</td>
+          <td class="route">London &rarr; Copenhagen</td>
+          <td class="transport">Short flight</td>
+          <td><span class="badge">3–4</span></td>
+        </tr>
+        <tr>
+          <td class="date">Jun 1</td>
+          <td class="route">CPH &rarr; Stockholm</td>
+          <td class="transport">Short flight</td>
+          <td><span class="badge">2</span></td>
+        </tr>
+        <tr>
+          <td class="date">Jun 3</td>
+          <td class="route">Stockholm &rarr; Helsinki</td>
+          <td class="transport">Short flight</td>
+          <td><span class="badge">2</span></td>
+        </tr>
+        <tr>
+          <td class="date">Jun 5</td>
+          <td class="route">Helsinki &rarr; Riga</td>
+          <td class="transport">Short flight</td>
+          <td><span class="badge">2</span></td>
+        </tr>
+        <tr>
+          <td class="date">Jun 7</td>
+          <td class="route">Riga &rarr; Prague</td>
+          <td class="transport">Short flight</td>
+          <td><span class="badge">2</span></td>
+        </tr>
+        <tr>
+          <td class="date">Jun 9</td>
+          <td class="route">Prague &rarr; Vienna</td>
+          <td class="transport">Scenic train (or flight)</td>
+          <td><span class="badge">2</span></td>
+        </tr>
+        <tr>
+          <td class="date">Jun 11</td>
+          <td class="route">Vienna &rarr; Split</td>
+          <td class="transport">Direct short flight</td>
+          <td><span class="badge">2</span></td>
+        </tr>
+        <tr>
+          <td class="date">Jun 13</td>
+          <td class="route">Split &rarr; SFO</td>
+          <td class="transport">1–2 stop long-haul</td>
+          <td class="dash">&mdash;</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const stops = [
+    { name: 'London',     lat: 51.5074, lon: -0.1278, date: 'May 26–27', nights: '2',   labelDir: 'left'   },
+    { name: 'Copenhagen', lat: 55.6761, lon: 12.5683, date: 'May 28',    nights: '3–4', labelDir: 'top'    },
+    { name: 'Stockholm',  lat: 59.3293, lon: 18.0686, date: 'Jun 1',     nights: '2',   labelDir: 'top'    },
+    { name: 'Helsinki',   lat: 60.1699, lon: 24.9384, date: 'Jun 3',     nights: '2',   labelDir: 'bottom' },
+    { name: 'Riga',       lat: 56.9496, lon: 24.1052, date: 'Jun 5',     nights: '2',   labelDir: 'right'  },
+    { name: 'Prague',     lat: 50.0755, lon: 14.4378, date: 'Jun 7',     nights: '2',   labelDir: 'left'   },
+    { name: 'Vienna',     lat: 48.2082, lon: 16.3738, date: 'Jun 9',     nights: '2',   labelDir: 'left'   },
+    { name: 'Split',      lat: 43.5081, lon: 16.4402, date: 'Jun 11',    nights: '2',   labelDir: 'left'   },
+  ];
+
+  // CartoDB Positron — clean, light, no visual noise
+  const map = L.map('map', { zoomControl: true, scrollWheelZoom: true });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Fit map to city bounds — invalidateSize first so Leaflet knows the true container dimensions
+  const bounds = L.latLngBounds(stops.map(s => [s.lat, s.lon]));
+  map.invalidateSize();
+  map.fitBounds(bounds, { padding: [80, 80] });
+  setTimeout(() => { map.invalidateSize(); map.fitBounds(bounds, { padding: [80, 80] }); }, 300);
+
+  // Flight legs (dashed blue)
+  const flightLegs = [
+    [0, 1], // London → Copenhagen
+    [1, 2], // Copenhagen → Stockholm
+    [2, 3], // Stockholm → Helsinki
+    [3, 4], // Helsinki → Riga
+    [4, 5], // Riga → Prague
+    [6, 7], // Vienna → Split
+  ];
+
+  flightLegs.forEach(([a, b]) => {
+    L.polyline(
+      [[stops[a].lat, stops[a].lon], [stops[b].lat, stops[b].lon]],
+      { color: '#4a7fd4', weight: 2.5, dashArray: '8 6', opacity: 0.8 }
+    ).addTo(map);
+  });
+
+  // Train leg: Prague → Vienna (solid green)
+  L.polyline(
+    [[stops[5].lat, stops[5].lon], [stops[6].lat, stops[6].lon]],
+    { color: '#2e9e5b', weight: 3, opacity: 0.85 }
+  ).addTo(map);
+
+  // City markers with permanent tooltips
+  stops.forEach((stop, i) => {
+    const marker = L.circleMarker([stop.lat, stop.lon], {
+      radius: 8,
+      fillColor: '#1a1a1a',
+      color: '#ffffff',
+      weight: 2.5,
+      fillOpacity: 1,
+    }).addTo(map);
+
+    marker.bindTooltip(
+      `<span class="city-name">${stop.name}</span>` +
+      `<span class="city-meta">${stop.date} &middot; ${stop.nights}n</span>`,
+      {
+        permanent: true,
+        direction: stop.labelDir,
+        className: 'city-tooltip',
+        offset: stop.labelDir === 'left'   ? [-12, 0]  :
+                stop.labelDir === 'right'  ? [12, 0]   :
+                stop.labelDir === 'top'    ? [0, -12]  :
+                                             [0, 12],
+      }
+    ).openTooltip();
+  });
+</script>
+</body>
+</html>
