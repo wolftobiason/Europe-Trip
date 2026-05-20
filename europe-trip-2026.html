@@ -53,11 +53,10 @@
     #map {
       height: 560px;
       width: 100%;
+      cursor: pointer;
     }
 
-    .map-card {
-      margin-bottom: 28px;
-    }
+    .map-card { margin-bottom: 28px; }
 
     .map-legend {
       display: flex;
@@ -70,23 +69,9 @@
       background: #faf9f6;
     }
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .legend-dash {
-      width: 28px;
-      height: 0;
-      border-top: 2px dashed #4a7fd4;
-    }
-
-    .legend-solid {
-      width: 28px;
-      height: 0;
-      border-top: 2.5px solid #2e9e5b;
-    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dash { width: 28px; height: 0; border-top: 2px dashed #4a7fd4; }
+    .legend-solid { width: 28px; height: 0; border-top: 2.5px solid #2e9e5b; }
 
     /* City tooltips */
     .city-tooltip {
@@ -98,12 +83,9 @@
       font-size: 11px !important;
       padding: 2px 4px !important;
       white-space: nowrap;
+      pointer-events: none;
     }
-
-    .city-tooltip::before {
-      display: none !important;
-    }
-
+    .city-tooltip::before { display: none !important; }
     .city-tooltip .city-name {
       font-weight: bold;
       font-size: 12px;
@@ -111,25 +93,113 @@
       color: #1a3a5c;
       text-shadow: 0 0 4px #fff, 0 0 8px #fff, 0 0 3px #fff;
     }
-
     .city-tooltip .city-meta {
       color: #4a6a8a;
       font-size: 10px;
-      margin-top: 0;
       display: block;
       text-shadow: 0 0 3px #fff, 0 0 6px #fff;
     }
 
-    /* Leaflet attribution styling */
-    .leaflet-control-attribution {
-      font-size: 10px !important;
+    .leaflet-control-attribution { font-size: 10px !important; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 340px;
+      height: 100vh;
+      background: #fff;
+      border-left: 1px solid #e2ddd5;
+      box-shadow: -6px 0 32px rgba(0,0,0,0.08);
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    .sb-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 24px 22px 18px;
+      border-bottom: 1px solid #f0ece5;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 1;
     }
 
-    /* TABLE */
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .sb-city { font-size: 1.35rem; font-weight: normal; letter-spacing: 0.04em; }
+
+    .sb-meta {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: #999;
+      font-style: italic;
     }
+
+    .sb-close {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      color: #bbb;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 4px;
+      margin-top: -2px;
+      transition: color 0.15s;
+    }
+    .sb-close:hover { color: #555; }
+
+    .sb-body { padding: 8px 0 32px; flex: 1; }
+
+    .sb-section { padding: 18px 22px; border-bottom: 1px solid #f5f2ed; }
+    .sb-section:last-child { border-bottom: none; }
+
+    .sb-label {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #bbb;
+      margin-bottom: 10px;
+    }
+
+    .sb-editable {
+      width: 100%;
+      min-height: 72px;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: #1a1a1a;
+      outline: none;
+      white-space: pre-wrap;
+    }
+    .sb-editable:empty::before {
+      content: attr(data-placeholder);
+      color: #ccc;
+      pointer-events: none;
+    }
+    .sb-editable:focus { color: #111; }
+
+    .sb-saved {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.7rem;
+      color: #bbb;
+      text-align: right;
+      padding: 6px 22px 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .sb-saved.show { opacity: 1; }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; }
 
     thead th {
       padding: 13px 22px;
@@ -150,7 +220,6 @@
       border-bottom: 1px solid #f0ece5;
       vertical-align: middle;
     }
-
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover td { background: #fdf9f4; }
 
@@ -160,15 +229,12 @@
       color: #888;
       white-space: nowrap;
     }
-
     .route { font-weight: 500; }
-
     .transport {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 0.85rem;
       color: #555;
     }
-
     .badge {
       display: inline-block;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -180,13 +246,59 @@
       border-radius: 20px;
       letter-spacing: 0.02em;
     }
-
     .dash { color: #bbb; }
+
+    /* Hint below map */
+    .map-hint {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.72rem;
+      color: #bbb;
+      text-align: center;
+      padding: 9px;
+      border-top: 1px solid #f0ece5;
+      background: #faf9f6;
+      letter-spacing: 0.02em;
+    }
   </style>
 </head>
 <body>
-<div class="container">
 
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sb-header">
+    <div>
+      <div class="sb-city" id="sb-city"></div>
+      <div class="sb-meta" id="sb-meta"></div>
+    </div>
+    <button class="sb-close" onclick="closeSidebar()" title="Close">&times;</button>
+  </div>
+
+  <div class="sb-body">
+    <div class="sb-section">
+      <div class="sb-label">Plans</div>
+      <div id="sb-plans" class="sb-editable" contenteditable="true"
+           data-placeholder="Things to see & do..."></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Food & Drink</div>
+      <div id="sb-food" class="sb-editable" contenteditable="true"
+           data-placeholder="Restaurants, cafes, bars..."></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Logistics</div>
+      <div id="sb-logistics" class="sb-editable" contenteditable="true"
+           data-placeholder="Hotel, bookings, transport..."></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Notes</div>
+      <div id="sb-notes" class="sb-editable" contenteditable="true"
+           data-placeholder="Anything else..."></div>
+    </div>
+    <div class="sb-saved" id="sb-saved">saved</div>
+  </div>
+</div>
+
+<div class="container">
   <header>
     <h1>Europe 2026</h1>
     <p class="subtitle">May 25 – Jun 13 &nbsp;&middot;&nbsp; 8 cities &nbsp;&middot;&nbsp; 19 nights</p>
@@ -195,15 +307,10 @@
   <!-- MAP -->
   <div class="card map-card">
     <div id="map"></div>
+    <div class="map-hint">Click any city to open your notes</div>
     <div class="map-legend">
-      <div class="legend-item">
-        <div class="legend-dash"></div>
-        <span>Flight</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-solid"></div>
-        <span>Scenic train</span>
-      </div>
+      <div class="legend-item"><div class="legend-dash"></div><span>Flight</span></div>
+      <div class="legend-item"><div class="legend-solid"></div><span>Scenic train</span></div>
     </div>
   </div>
 
@@ -282,10 +389,10 @@
       </tbody>
     </table>
   </div>
-
 </div>
 
 <script>
+  /* ── STOPS ── */
   const stops = [
     { name: 'London',     lat: 51.5074, lon: -0.1278, date: 'May 26–27', nights: '2',   labelDir: 'left'   },
     { name: 'Copenhagen', lat: 55.6761, lon: 12.5683, date: 'May 28',    nights: '3–4', labelDir: 'top'    },
@@ -297,7 +404,7 @@
     { name: 'Split',      lat: 43.5081, lon: 16.4402, date: 'Jun 11',    nights: '2',   labelDir: 'left'   },
   ];
 
-  // CartoDB Positron — clean, light, no visual noise
+  /* ── MAP ── */
   const map = L.map('map', { zoomControl: true, scrollWheelZoom: true });
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -306,22 +413,13 @@
     maxZoom: 19
   }).addTo(map);
 
-  // Fit map to city bounds — invalidateSize first so Leaflet knows the true container dimensions
   const bounds = L.latLngBounds(stops.map(s => [s.lat, s.lon]));
   map.invalidateSize();
   map.fitBounds(bounds, { padding: [80, 80] });
   setTimeout(() => { map.invalidateSize(); map.fitBounds(bounds, { padding: [80, 80] }); }, 300);
 
-  // Flight legs (dashed blue)
-  const flightLegs = [
-    [0, 1], // London → Copenhagen
-    [1, 2], // Copenhagen → Stockholm
-    [2, 3], // Stockholm → Helsinki
-    [3, 4], // Helsinki → Riga
-    [4, 5], // Riga → Prague
-    [6, 7], // Vienna → Split
-  ];
-
+  /* ── ROUTES ── */
+  const flightLegs = [[0,1],[1,2],[2,3],[3,4],[4,5],[6,7]];
   flightLegs.forEach(([a, b]) => {
     L.polyline(
       [[stops[a].lat, stops[a].lon], [stops[b].lat, stops[b].lon]],
@@ -329,14 +427,13 @@
     ).addTo(map);
   });
 
-  // Train leg: Prague → Vienna (solid green)
   L.polyline(
     [[stops[5].lat, stops[5].lon], [stops[6].lat, stops[6].lon]],
     { color: '#2e9e5b', weight: 3, opacity: 0.85 }
   ).addTo(map);
 
-  // City markers with permanent tooltips
-  stops.forEach((stop, i) => {
+  /* ── MARKERS ── */
+  stops.forEach(stop => {
     const marker = L.circleMarker([stop.lat, stop.lon], {
       radius: 8,
       fillColor: '#1a1a1a',
@@ -352,12 +449,72 @@
         permanent: true,
         direction: stop.labelDir,
         className: 'city-tooltip',
-        offset: stop.labelDir === 'left'   ? [-12, 0]  :
-                stop.labelDir === 'right'  ? [12, 0]   :
-                stop.labelDir === 'top'    ? [0, -12]  :
-                                             [0, 12],
+        offset: stop.labelDir === 'left'  ? [-12, 0] :
+                stop.labelDir === 'right' ? [12, 0]  :
+                stop.labelDir === 'top'   ? [0, -12] : [0, 12],
       }
     ).openTooltip();
+
+    marker.on('click', () => openSidebar(stop));
+
+    // pulse on hover to hint it's clickable
+    marker.on('mouseover', function() { this.setStyle({ radius: 10 }); });
+    marker.on('mouseout',  function() { this.setStyle({ radius: 8  }); });
+  });
+
+  /* ── SIDEBAR ── */
+  const FIELDS = ['plans', 'food', 'logistics', 'notes'];
+  let currentCity = null;
+  let saveTimer   = null;
+  let savedTimer  = null;
+
+  function storageKey(city) { return `europe-2026-${city}`; }
+
+  function openSidebar(stop) {
+    currentCity = stop.name;
+    document.getElementById('sb-city').textContent = stop.name;
+    document.getElementById('sb-meta').textContent = `${stop.date} · ${stop.nights} nights`;
+
+    const saved = JSON.parse(localStorage.getItem(storageKey(stop.name)) || '{}');
+    FIELDS.forEach(f => {
+      document.getElementById(`sb-${f}`).textContent = saved[f] || '';
+    });
+
+    document.getElementById('sidebar').classList.add('open');
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    currentCity = null;
+  }
+
+  function saveData() {
+    if (!currentCity) return;
+    const data = {};
+    FIELDS.forEach(f => { data[f] = document.getElementById(`sb-${f}`).textContent.trim(); });
+    localStorage.setItem(storageKey(currentCity), JSON.stringify(data));
+
+    // flash "saved"
+    const el = document.getElementById('sb-saved');
+    el.classList.add('show');
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => el.classList.remove('show'), 1400);
+  }
+
+  // Auto-save on input
+  FIELDS.forEach(f => {
+    document.getElementById(`sb-${f}`).addEventListener('input', () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveData, 500);
+    });
+  });
+
+  // Close sidebar when clicking the map background
+  map.on('click', closeSidebar);
+
+  // Escape key closes sidebar
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeSidebar();
   });
 </script>
 </body>
