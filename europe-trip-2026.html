@@ -383,7 +383,7 @@
   /* ── STOPS ── */
   const stops = [
     { name: 'London',     lat: 51.5074, lon: -0.1278, date: 'May 26–27', nights: '2',   labelDir: 'left'   },
-    { name: 'Copenhagen', lat: 55.6761, lon: 12.5683, date: 'May 28',    nights: '3–4', labelDir: 'top',    link: 'https://wolftobiason.github.io/Europe-Trip/copenhagen' },
+    { name: 'Copenhagen', lat: 55.6761, lon: 12.5683, date: 'May 28',    nights: '3–4', labelDir: 'top'    },
     { name: 'Stockholm',  lat: 59.3293, lon: 18.0686, date: 'Jun 1',     nights: '2',   labelDir: 'top'    },
     { name: 'Helsinki',   lat: 60.1699, lon: 24.9384, date: 'Jun 3',     nights: '2',   labelDir: 'bottom' },
     { name: 'Riga',       lat: 56.9496, lon: 24.1052, date: 'Jun 5',     nights: '2',   labelDir: 'right'  },
@@ -443,10 +443,7 @@
       }
     ).openTooltip();
 
-    marker.on('click', () => {
-      if (stop.link) { window.location.href = stop.link; return; }
-      openSidebar(stop);
-    });
+    marker.on('click', () => openSidebar(stop));
 
     // pulse on hover to hint it's clickable
     marker.on('mouseover', function() { this.setStyle({ radius: 10 }); });
