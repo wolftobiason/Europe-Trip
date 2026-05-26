@@ -167,6 +167,11 @@
     { name: 'Hyde Park',               cat: 'attraction', lat: 51.5073, lon: -0.1657, note: 'Accessible from Park Lane & Bayswater Road, W2 2UH' },
     { name: 'Covent Garden',           cat: 'attraction', lat: 51.5117, lon: -0.1240, note: 'The Market Building, WC2E 8RF — shops, dining, street performers' },
     { name: 'City of London',          cat: 'attraction', lat: 51.5138, lon: -0.0984, note: "Historic financial district — start at St. Paul's Cathedral, EC2" },
+    { name: 'Camden Market',           cat: 'attraction', lat: 51.5414, lon: -0.1466, note: 'Camden Lock Place — vintage, street food, live music' },
+    { name: 'Borough Market',          cat: 'attraction', lat: 51.5054, lon: -0.0912, note: '8 Southwark Street, SE1 1TL — one of London\'s oldest food markets' },
+    { name: 'Notting Hill',            cat: 'attraction', lat: 51.5130, lon: -0.2010, note: 'Portobello Road — antiques, markets, colourful terraces' },
+    { name: 'Kensington',              cat: 'attraction', lat: 51.4989, lon: -0.1929, note: 'Kensington High Street — upscale neighbourhood walk' },
+    { name: 'Piccadilly Circus',       cat: 'attraction', lat: 51.5099, lon: -0.1342, note: 'Iconic junction — neon lights, street performers, West End gateway' },
 
     // Museums
     { name: 'British Museum',          cat: 'museum', lat: 51.5194, lon: -0.1270, note: 'Great Russell Street, WC1B 3DG — Elgin Marbles, Rosetta Stone' },
@@ -185,7 +190,7 @@
   ];
 
   /* ── MAP ── */
-  const map = L.map('map').setView([51.5020, -0.1100], 13);
+  const map = L.map('map').setView([51.5080, -0.1350], 12);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
