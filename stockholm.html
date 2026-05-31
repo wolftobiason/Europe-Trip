@@ -158,20 +158,20 @@
     { name: 'Bank Hotel',              cat: 'hotel', lat: 59.3314, lon: 18.0747, note: 'Arsenalsgatan 6, 111 47 Stockholm' },
 
     // Attractions
-    { name: 'Gamla Stan',              cat: 'attraction', lat: 59.3247, lon: 18.0714, note: 'Old Town — great for wandering, cobblestone streets' },
+    { name: 'Gamla Stan',              cat: 'attraction', lat: 59.3247, lon: 18.0714, note: 'Old Town — great for wandering, cobblestone streets', bo: true },
 
     // Castles
-    { name: 'Royal Palace',            cat: 'castle', lat: 59.3268, lon: 18.0717, note: 'Kungliga Slottet — one of Europe\'s largest palaces' },
+    { name: 'Royal Palace',            cat: 'castle', lat: 59.3268, lon: 18.0717, note: 'Kungliga Slottet — one of Europe\'s largest palaces', bo: true },
 
     // Museums
-    { name: 'Vasa Museum',             cat: 'museum', lat: 59.3280, lon: 18.0914, note: 'Galärvarvsvägen 14, Djurgården — preserved 1628 warship' },
-    { name: 'Army Museum',             cat: 'museum', lat: 59.3343, lon: 18.0798, note: 'Riddargatan 13 — Swedish military history' },
-    { name: 'Livrustkammaren',         cat: 'museum', lat: 59.3265, lon: 18.0720, note: 'Royal Armoury, inside the Palace — oldest museum in Sweden' },
-    { name: 'Nobel Prize Museum',      cat: 'museum', lat: 59.3253, lon: 18.0707, note: 'Stortorget 2, Gamla Stan' },
-    { name: 'National Museum',         cat: 'museum', lat: 59.3286, lon: 18.0781, note: 'Södra Blasieholmshamnen — Swedish art & design' },
+    { name: 'Vasa Museum',             cat: 'museum', lat: 59.3280, lon: 18.0914, note: 'Galärvarvsvägen 14, Djurgården — preserved 1628 warship', bo: true },
+    { name: 'Army Museum',             cat: 'museum', lat: 59.3343, lon: 18.0798, note: 'Riddargatan 13 — Swedish military history', bo: true },
+    { name: 'Livrustkammaren',         cat: 'museum', lat: 59.3265, lon: 18.0720, note: 'Royal Armoury, inside the Palace — oldest museum in Sweden', bo: true },
+    { name: 'Nobel Prize Museum',      cat: 'museum', lat: 59.3253, lon: 18.0707, note: 'Stortorget 2, Gamla Stan', bo: true },
+    { name: 'National Museum',         cat: 'museum', lat: 59.3286, lon: 18.0781, note: 'Södra Blasieholmshamnen — Swedish art & design', bo: true },
 
     // Food
-    { name: 'Dinner in Gamla Stan',    cat: 'restaurant', lat: 59.3250, lon: 18.0720, note: 'Walk the old town then dinner — Bo\'s recommendation' },
+    { name: 'Dinner in Gamla Stan',    cat: 'restaurant', lat: 59.3250, lon: 18.0722, note: 'Walk the old town then dinner — Bo\'s recommendation', bo: true },
   ];
 
   /* ── MAP ── */
@@ -184,8 +184,9 @@
   }).addTo(map);
 
   /* ── MARKERS ── */
-  const markers = {};
   const activeFilters = new Set(Object.keys(cats));
+  let boFilterActive = true;
+  const allMarkerData = [];
 
   places.forEach(p => {
     const c = cats[p.cat];
@@ -210,10 +211,17 @@
     );
 
     const m = L.marker([p.lat, p.lon], { icon }).addTo(map).bindPopup(popup);
-
-    if (!markers[p.cat]) markers[p.cat] = [];
-    markers[p.cat].push(m);
+    allMarkerData.push({ marker: m, place: p });
   });
+
+  function refreshVisibility() {
+    allMarkerData.forEach(({ marker, place }) => {
+      const catActive = activeFilters.has(place.cat);
+      const boActive  = boFilterActive && place.bo;
+      if (catActive || boActive) marker.addTo(map);
+      else marker.remove();
+    });
+  }
 
   /* ── FILTER BUTTONS ── */
   const bar = document.getElementById('filters');
@@ -230,17 +238,31 @@
         activeFilters.delete(key);
         btn.classList.remove('active');
         btn.classList.add('inactive');
-        markers[key]?.forEach(m => m.remove());
       } else {
         activeFilters.add(key);
         btn.classList.add('active');
         btn.classList.remove('inactive');
-        markers[key]?.forEach(m => m.addTo(map));
       }
+      refreshVisibility();
     });
 
     bar.appendChild(btn);
   });
+
+  /* ── BO RECS BUTTON ── */
+  const boBtn = document.createElement('button');
+  boBtn.className = 'filter-btn active';
+  boBtn.innerHTML = `<span class="dot" style="background:#ca8a04"></span>Bo Recs`;
+  boBtn.style.borderColor = '#ca8a0455';
+
+  boBtn.addEventListener('click', () => {
+    boFilterActive = !boFilterActive;
+    boBtn.classList.toggle('active',   boFilterActive);
+    boBtn.classList.toggle('inactive', !boFilterActive);
+    refreshVisibility();
+  });
+
+  bar.appendChild(boBtn);
 </script>
 </body>
 </html>
