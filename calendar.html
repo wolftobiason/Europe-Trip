@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trip Calendar · Europe 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: #f5f3ee;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 48px 24px 80px;
+    }
+
+    .container { max-width: 780px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 40px; }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: normal;
+      letter-spacing: 0.05em;
+    }
+    .subtitle {
+      margin-top: 6px;
+      font-size: 0.88rem;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.8rem;
+      color: #555;
+    }
+    .legend-swatch {
+      width: 28px;
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    /* ── MONTHS ── */
+    .months {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .month-block {}
+
+    .month-name {
+      font-size: 1.1rem;
+      font-weight: normal;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+
+    .dow {
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #bbb;
+      padding-bottom: 6px;
+    }
+
+    .day {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .day-num {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .day-city {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.52rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 3px;
+      opacity: 0.85;
+    }
+
+    /* empty placeholder */
+    .day.empty { background: transparent; }
+
+    /* non-trip day */
+    .day.off {
+      background: transparent;
+    }
+    .day.off .day-num { color: #ccc; }
+
+    /* trip day */
+    .day.trip .day-num { color: #fff; }
+    .day.trip .day-city { color: #fff; }
+
+    /* travel day */
+    .day.travel {
+      background: #e8e4de !important;
+    }
+    .day.travel .day-num { color: #999; }
+    .day.travel .day-city { color: #aaa; }
+
+    /* today highlight */
+    .day.today::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.6);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Europe 2026</h1>
+    <p class="subtitle">May 25 – Jun 30 &nbsp;&middot;&nbsp; 5 cities &nbsp;&middot;&nbsp; 36 nights</p>
+  </header>
+
+  <!-- LEGEND -->
+  <div class="legend" id="legend"></div>
+
+  <!-- CALENDARS -->
+  <div class="months" id="months"></div>
+
+</div>
+<script>
+  const cities = [
+    { name: 'London',     color: '#3b3b3b', start: '2026-05-26', end: '2026-05-28' },
+    { name: 'Copenhagen', color: '#e05c4b', start: '2026-05-28', end: '2026-06-01' },
+    { name: 'Stockholm',  color: '#7c3aed', start: '2026-06-01', end: '2026-06-06' },
+    { name: 'Helsinki',   color: '#2563eb', start: '2026-06-06', end: '2026-06-12' },
+    { name: 'Stockholm',  color: '#7c3aed', start: '2026-06-12', end: '2026-06-16' },
+    { name: 'Copenhagen', color: '#e05c4b', start: '2026-06-16', end: '2026-06-22' },
+    { name: 'Oslo',       color: '#059669', start: '2026-06-22', end: '2026-06-25' },
+    { name: 'Stockholm',  color: '#7c3aed', start: '2026-06-25', end: '2026-07-01' },
+  ];
+
+  const TRAVEL_DAYS = ['2026-05-25']; // outbound
+
+  /* ── LEGEND ── */
+  const uniqueCities = [
+    { name: 'London',     color: '#3b3b3b' },
+    { name: 'Copenhagen', color: '#e05c4b' },
+    { name: 'Stockholm',  color: '#7c3aed' },
+    { name: 'Helsinki',   color: '#2563eb' },
+    { name: 'Oslo',       color: '#059669' },
+    { name: 'Travel day',  color: '#e8e4de', text: '#999' },
+  ];
+
+  const legendEl = document.getElementById('legend');
+  uniqueCities.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `
+      <div class="legend-swatch" style="background:${c.color}"></div>
+      <span>${c.name}</span>
+    `;
+    legendEl.appendChild(item);
+  });
+
+  /* ── CITY FOR DATE ── */
+  function cityForDate(dateStr) {
+    for (const c of cities) {
+      const s = new Date(c.start + 'T00:00:00');
+      const e = new Date(c.end   + 'T00:00:00');
+      const d = new Date(dateStr  + 'T00:00:00');
+      if (d >= s && d < e) return c;
+    }
+    return null;
+  }
+
+  function isTravelDay(dateStr) {
+    return TRAVEL_DAYS.includes(dateStr);
+  }
+
+  function toDateStr(y, m, d) {
+    return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  /* ── BUILD CALENDAR ── */
+  const months = [
+    { year: 2026, month: 5, label: 'May' },
+    { year: 2026, month: 6, label: 'June' },
+  ];
+
+  const dows = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const monthsEl = document.getElementById('months');
+
+  months.forEach(({ year, month, label }) => {
+    const block = document.createElement('div');
+    block.className = 'month-block';
+
+    const title = document.createElement('div');
+    title.className = 'month-name';
+    title.textContent = label;
+    block.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'cal-grid';
+
+    // Day-of-week headers
+    dows.forEach(d => {
+      const h = document.createElement('div');
+      h.className = 'dow';
+      h.textContent = d;
+      grid.appendChild(h);
+    });
+
+    // First day offset
+    const firstDay = new Date(year, month - 1, 1).getDay(); // 0=Sun
+    for (let i = 0; i < firstDay; i++) {
+      const blank = document.createElement('div');
+      blank.className = 'day empty';
+      grid.appendChild(blank);
+    }
+
+    // Days in month
+    const daysInMonth = new Date(year, month, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = toDateStr(year, month, d);
+      const city    = cityForDate(dateStr);
+      const travel  = isTravelDay(dateStr);
+      const isToday = dateStr === today;
+
+      const cell = document.createElement('div');
+      cell.className = 'day';
+
+      if (travel) {
+        cell.classList.add('travel');
+        cell.innerHTML = `<span class="day-num">${d}</span><span class="day-city">Travel</span>`;
+      } else if (city) {
+        cell.classList.add('trip');
+        cell.style.background = city.color;
+        cell.innerHTML = `<span class="day-num">${d}</span><span class="day-city">${city.name}</span>`;
+      } else {
+        cell.classList.add('off');
+        cell.innerHTML = `<span class="day-num">${d}</span>`;
+      }
+
+      if (isToday) cell.classList.add('today');
+      grid.appendChild(cell);
+    }
+
+    block.appendChild(grid);
+    monthsEl.appendChild(block);
+  });
+</script>
+</body>
+</html>
