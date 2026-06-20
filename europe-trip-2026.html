@@ -367,8 +367,9 @@
     { name: 'London',     lat: 51.5074, lon: -0.1278, date: 'May 26–27', nights: '2',   labelDir: 'left'   },
     { name: 'Copenhagen', lat: 55.6761, lon: 12.5683, date: 'May 28',    nights: '4',   labelDir: 'top'    },
     { name: 'Stockholm',  lat: 59.3293, lon: 18.0686, date: 'Jun 1',     nights: '5',   labelDir: 'top'    },
-    { name: 'Helsinki',   lat: 60.1699, lon: 24.9384, date: 'Jun 6',     nights: '5',   labelDir: 'bottom' },
-    { name: 'Stockholm',  lat: 59.3293, lon: 18.0686, date: 'Jun 11',    nights: '10',  labelDir: 'right'  },
+    { name: 'Helsinki',   lat: 60.1699, lon: 24.9384, date: 'Jun 6',     nights: '6',   labelDir: 'bottom' },
+    { name: 'Stockholm',  lat: 59.3293, lon: 18.0686, date: 'Jun 12',    nights: '4',   labelDir: 'right'  },
+    { name: 'Copenhagen', lat: 55.6761, lon: 12.5683, date: 'Jun 16',    nights: '12',  labelDir: 'bottom' },
   ];
 
   /* ── MAP ── */
@@ -386,7 +387,7 @@
   setTimeout(() => { map.invalidateSize(); map.fitBounds(bounds, { padding: [80, 80] }); }, 300);
 
   /* ── ROUTES ── */
-  const flightLegs = [[0,1],[1,2],[2,3],[3,4]];
+  const flightLegs = [[0,1],[1,2],[2,3],[3,4],[4,5]];
   flightLegs.forEach(([a, b]) => {
     L.polyline(
       [[stops[a].lat, stops[a].lon], [stops[b].lat, stops[b].lon]],
