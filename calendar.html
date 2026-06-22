@@ -151,7 +151,7 @@
 
   <header>
     <h1>Europe 2026</h1>
-    <p class="subtitle">May 25 – Jun 28 &nbsp;&middot;&nbsp; 5 cities &nbsp;&middot;&nbsp; 33 nights</p>
+    <p class="subtitle">May 25 – Jul 2 &nbsp;&middot;&nbsp; 5 cities &nbsp;&middot;&nbsp; 37 nights</p>
   </header>
 
   <!-- LEGEND -->
@@ -169,6 +169,7 @@
     { name: 'Helsinki',   color: '#2563eb', start: '2026-06-06', end: '2026-06-12' },
     { name: 'Stockholm',  color: '#7c3aed', start: '2026-06-12', end: '2026-06-16' },
     { name: 'Copenhagen', color: '#e05c4b', start: '2026-06-16', end: '2026-06-29' },
+    { name: 'Oslo',       color: '#059669', start: '2026-06-29', end: '2026-07-03' },
   ];
 
   const TRAVEL_DAYS = ['2026-05-25']; // outbound
@@ -179,7 +180,8 @@
     { name: 'Copenhagen', color: '#e05c4b' },
     { name: 'Stockholm',  color: '#7c3aed' },
     { name: 'Helsinki',   color: '#2563eb' },
-    { name: 'Travel day',  color: '#e8e4de', text: '#999' },
+    { name: 'Oslo',       color: '#059669' },
+    { name: 'Travel day', color: '#e8e4de', text: '#999' },
   ];
 
   const legendEl = document.getElementById('legend');
@@ -218,6 +220,7 @@
   const months = [
     { year: 2026, month: 5, label: 'May' },
     { year: 2026, month: 6, label: 'June' },
+    { year: 2026, month: 7, label: 'July' },
   ];
 
   const dows = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
