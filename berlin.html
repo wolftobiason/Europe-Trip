@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berlin · Jul 13</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: #f5f3ee;
+      color: #1a1a1a;
+    }
+
+    .header {
+      padding: 18px 28px 14px;
+      background: #fff;
+      border-bottom: 1px solid #e2ddd5;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .header h1 { font-size: 1.5rem; font-weight: normal; letter-spacing: 0.05em; }
+    .header .meta { font-size: 0.85rem; color: #999; font-style: italic; }
+    .header .notes { margin-left: auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.75rem; color: #aaa; letter-spacing: 0.02em; }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      padding: 10px 28px;
+      background: #faf9f6;
+      border-bottom: 1px solid #e2ddd5;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 20px; border: 1.5px solid transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.72rem; font-weight: 500; cursor: pointer;
+      transition: opacity 0.15s; background: #fff; color: #555; letter-spacing: 0.03em;
+    }
+    .filter-btn .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .filter-btn.active { color: #1a1a1a; }
+    .filter-btn.inactive { opacity: 0.4; }
+
+    #map { height: 520px; width: 100%; }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 8px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
+      border: 1px solid #e2ddd5 !important;
+    }
+    .leaflet-popup-content { margin: 12px 16px !important; font-family: 'Georgia', serif !important; }
+    .popup-name { font-size: 0.95rem; font-weight: bold; color: #1a1a1a; }
+    .popup-cat { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #aaa; margin-top: 2px; }
+    .popup-note { font-size: 0.82rem; color: #666; margin-top: 6px; font-style: italic; }
+    .leaflet-popup-tip { background: #fff !important; }
+
+    /* ── KEY ── */
+    .key {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 52px 28px 100px;
+    }
+
+    .key-intro {
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.75;
+      border-left: 2px solid #d6d1c8;
+      padding-left: 18px;
+      margin-bottom: 52px;
+      font-style: italic;
+    }
+
+    .key-section { margin-bottom: 44px; }
+
+    .key-section-title {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.64rem;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: #b0a898;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e4e0d8;
+    }
+
+    .key-entry {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid #eeebe4;
+    }
+    .key-entry:last-child { border-bottom: none; }
+
+    .key-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .key-content { flex: 1; }
+
+    .key-name {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #1a1a1a;
+      margin-bottom: 5px;
+    }
+
+    .key-note {
+      font-size: 0.84rem;
+      color: #666;
+      line-height: 1.7;
+      font-style: italic;
+    }
+    .key-note strong { font-style: normal; color: #444; font-weight: bold; }
+    .key-note em { font-style: italic; }
+
+    .key-item {
+      padding: 14px 0;
+      border-bottom: 1px solid #eeebe4;
+    }
+    .key-item:last-child { border-bottom: none; }
+
+    .key-item-title {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .key-item-note {
+      font-size: 0.84rem;
+      color: #666;
+      line-height: 1.7;
+      font-style: italic;
+    }
+    .key-item-note strong { font-style: normal; color: #444; }
+
+    .key-subhead {
+      font-size: 0.78rem;
+      color: #999;
+      font-style: italic;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Berlin</h1>
+  <span class="meta">Jul 13–19 &nbsp;&middot;&nbsp; 7 nights</span>
+  <span class="notes">Hotel Adlon Kempinski &nbsp;&middot;&nbsp; Museum Island &nbsp;&middot;&nbsp; Kulturforum</span>
+</div>
+
+<div class="filters" id="filters"></div>
+<div id="map"></div>
+
+<div class="key">
+
+  <div class="key-intro">
+    Hey Wolfie — here are my top travel tips, museum details, and recommendations for your trip to Berlin. I've added a few important logistical updates — especially a major heads-up regarding the Pergamon Museum — so you can plan smoothly.
+  </div>
+
+  <!-- MUSEUM ISLAND -->
+  <div class="key-section">
+    <div class="key-section-title">Museum Island</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Pergamon Museum Das Panorama</div>
+        <div class="key-note"><strong>Crucial warning:</strong> The main Pergamon Museum building is currently closed for massive, multi-year renovations. However, you can still see the spectacular Ishtar Gate and a stunning, giant 360-degree exhibition of the altar at <em>The Pergamon Museum. Das Panorama</em> — right across the canal from Museum Island.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Altes Museum</div>
+        <div class="key-note">The primary home for ancient Greek and Roman art on Museum Island.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Neues Museum</div>
+        <div class="key-note">World-class classical antiquities alongside its famous Egyptian collection — including the <strong>Nefertiti Bust</strong>.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Alte Nationalgalerie</div>
+        <div class="key-note">Go here for the iconic Romantic landscapes of <strong>Caspar David Friedrich</strong> — including <em>The Monk by the Sea</em>.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Deutsches Historisches Museum</div>
+        <div class="key-note">On Unter den Linden. Note: the grand permanent exhibition hall is under renovation, but the ultra-modern <strong>Pei Building</strong> right behind it hosts brilliant rotating temporary history exhibitions.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KULTURFORUM -->
+  <div class="key-section">
+    <div class="key-section-title">Kulturforum</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Gemäldegalerie</div>
+        <div class="key-note">The world-class Old Masters collection — where you will find <strong>Hans Holbein</strong> and <strong>Lucas Cranach the Elder</strong>.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Neue Nationalgalerie</div>
+        <div class="key-note">A striking modernist glass building designed by <strong>Mies van der Rohe</strong> — houses 20th-century art, including the works of <strong>Otto Dix</strong> and the German Expressionists.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WWII & HISTORY -->
+  <div class="key-section">
+    <div class="key-section-title">WWII &amp; Cold War History</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#dc2626"></div>
+      <div class="key-content">
+        <div class="key-name">Bendlerblock</div>
+        <div class="key-note">This historic building served as headquarters for the German Army resistance during WWII. In the courtyard you will find the <strong>Memorial to the German Resistance</strong> — the exact spot where Colonel Claus von Stauffenberg was executed after the failed July 20, 1944 plot to assassinate Hitler.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#dc2626"></div>
+      <div class="key-content">
+        <div class="key-name">Plötzensee Prison Memorial</div>
+        <div class="key-note">Located in northwestern Berlin — a deeply moving, solemn memorial dedicated to the thousands of political prisoners executed by the Nazi regime here, including many of the July 20th conspirators.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LANDMARKS -->
+  <div class="key-section">
+    <div class="key-section-title">Landmarks</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#d97706"></div>
+      <div class="key-content">
+        <div class="key-name">Kaiser Wilhelm Memorial Church</div>
+        <div class="key-note">On the Kurfürstendamm. The bombed-out spire of the original church stands as a dramatic anti-war memorial, right next to a striking modern blue-glass chapel. The chapel regularly hosts stunning evening <strong>organ and chamber music concerts</strong> surrounded by intense blue stained glass.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#d97706"></div>
+      <div class="key-content">
+        <div class="key-name">Alexanderplatz</div>
+        <div class="key-note">Setting of Alfred Döblin's <em>Berlin Alexanderplatz</em> — a short walk from Museum Island. Read a chapter there.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#d97706"></div>
+      <div class="key-content">
+        <div class="key-name">Theater am Schiffbauerdamm</div>
+        <div class="key-note">Kurt Weill's <em>Threepenny Opera</em> — featuring "Mack the Knife" — premiered here in 1928. Still standing, still a working theater. Walk past it.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#d97706"></div>
+      <div class="key-content">
+        <div class="key-name">Brandenburg Gate</div>
+        <div class="key-note">Right outside the Adlon — impossible to miss.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MUSIC & OPERA -->
+  <div class="key-section">
+    <div class="key-section-title">Classical Music &amp; Opera</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#7c3aed"></div>
+      <div class="key-content">
+        <div class="key-name">Berlin Philharmonic (Berliner Philharmoniker)</div>
+        <div class="key-note">At their iconic hall in the Kulturforum. Look up the performance schedule — if you can catch them live, the music list below becomes a preview instead of homework.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#7c3aed"></div>
+      <div class="key-content">
+        <div class="key-name">Staatsoper Unter den Linden</div>
+        <div class="key-note">Berlin's most historic opera house, on the famous boulevard.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#7c3aed"></div>
+      <div class="key-content">
+        <div class="key-name">Deutsche Oper</div>
+        <div class="key-note">Bismarckstraße 35, Charlottenburg — one of Berlin's three major opera houses.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#7c3aed"></div>
+      <div class="key-content">
+        <div class="key-name">Komische Oper</div>
+        <div class="key-note">Known for more accessible and innovative productions.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOD -->
+  <div class="key-section">
+    <div class="key-section-title">Local Food</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">Currywurst &amp; Berliner Knacker</div>
+        <div class="key-note">Grab a traditional <strong>Currywurst</strong> (sliced pork sausage topped with spiced curry ketchup) or a classic Berliner Knacker from a street kiosk.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">Kreuzberg — Turkish &amp; Döner</div>
+        <div class="key-note">Berlin is famous for its Turkish diaspora. Head to Kreuzberg or Wedding for an authentic <strong>Döner Kebab</strong> — the modern street-food form was popularized right here in Berlin.</div>
+      </div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Spaghettieis</div>
+      <div class="key-item-note">A classic German summer treat. Go to any traditional Italian-German <em>Eisdiele</em> and order this — vanilla ice cream pressed through a noodle machine to look like spaghetti, topped with strawberry "tomato" sauce and white chocolate "parmesan" flakes.</div>
+    </div>
+  </div>
+
+  <!-- DAY TRIPS -->
+  <div class="key-section">
+    <div class="key-section-title">Day Trips</div>
+
+    <div class="key-item">
+      <div class="key-item-title">Potsdam — absolute must-do</div>
+      <div class="key-item-note">Just a 30-minute ride on the S-Bahn (Line S7) from central Berlin. Rent a bicycle outside the station and spend the day exploring Frederick the Great's <strong>Sanssouci Palace</strong>, the New Palace, and <strong>Cecilienhof Palace</strong> — where the 1945 Potsdam Conference took place.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Dresden</div>
+      <div class="key-item-note">High-speed EuroCity trains from Berlin Hauptbahnhof in just under 2 hours. The historic Altstadt is beautiful, and the completely reconstructed <strong>Frauenkirche</strong> — rebuilt from WWII ruins — is entirely worth the trip.</div>
+    </div>
+  </div>
+
+  <!-- READING -->
+  <div class="key-section">
+    <div class="key-section-title">What to Read</div>
+    <div class="key-subhead">Goes light to heavy — don't start with max deadlifts.</div>
+
+    <div class="key-item">
+      <div class="key-item-title">Franz Kafka</div>
+      <div class="key-item-note">Start with the parables: <em>"Before the Law"</em> (600 words — read it tonight), <em>"An Imperial Message,"</em> <em>"A Little Fable."</em> Then the longer stories if hooked. Schocken Complete Stories has everything.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Heinrich von Kleist — <em>Michael Kohlhaas</em></div>
+      <div class="key-item-note">Trans. Michael Hofmann (New Directions). 100 pages. A horse dealer wronged by a nobleman takes his case from the courts to open rebellion — the great German story about justice. <strong>Based on a true story.</strong></div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Theodor Storm — <em>The Rider on the White Horse and Selected Stories</em></div>
+      <div class="key-item-note">Trans. James Wright (NYRB Classics). Dikes, the North Sea, ambition, a ghost horse. Perfect for a train ride. <strong>Great ghost story.</strong></div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Rainer Maria Rilke — <em>Letters to a Young Poet</em></div>
+      <div class="key-item-note">Trans. Stephen Mitchell. Written to a man your age asking the questions you're asking. Read slowly.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Hans Fallada — <em>Every Man Dies Alone</em></div>
+      <div class="key-item-note">Melville House. Berlin under the Nazis, based on a real Gestapo case file — an ordinary working-class couple who dropped anti-Hitler postcards around the city until they were caught. Pairs with Bendlerblock and Plötzensee: this is what those memorials are about. <em>See the film version below.</em></div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Thomas Mann — <em>Buddenbrooks</em> <span style="font-weight:normal; color:#999;">(if ambitious)</span></div>
+      <div class="key-item-note">Trans. John E. Woods (Vintage). Four generations of a merchant family in decline. He wrote it at 25; it won him the Nobel.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Alfred Döblin — <em>Berlin Alexanderplatz</em> <span style="font-weight:normal; color:#999;">(if ambitious)</span></div>
+      <div class="key-item-note">Trans. Michael Hofmann (NYRB Classics). The Berlin novel — and Alexanderplatz is a short walk from Museum Island. Read a chapter there.</div>
+    </div>
+  </div>
+
+  <!-- FILMS -->
+  <div class="key-section">
+    <div class="key-section-title">Films</div>
+
+    <div class="key-item">
+      <div class="key-item-title">Wings of Desire (Wenders, 1987)</div>
+      <div class="key-item-note">Angels over divided Berlin, shot on location — you'll recognize the streets.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Alone in Berlin (2016)</div>
+      <div class="key-item-note">The Fallada adaptation — Gleeson and Thompson.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Valkyrie (2008)</div>
+      <div class="key-item-note">The July 20 plot. <strong>Especially watch after visiting Bendlerblock.</strong> Great film about my greatest heroes.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Mephisto (Szabó, 1981)</div>
+      <div class="key-item-note">An actor sells his soul to the Reich — Klaus Maria Brandauer is terrifying.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Das Boot (1981)</div>
+      <div class="key-item-note">The director's cut if you have the stamina.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">All Quiet on the Western Front (2022)</div>
+      <div class="key-item-note">German-language version.</div>
+    </div>
+  </div>
+
+  <!-- MUSIC -->
+  <div class="key-section">
+    <div class="key-section-title">Music — a German canon starter kit</div>
+    <div class="key-subhead">Where possible, listen to the Berlin Philharmonic recordings — Karajan especially. You'll be hearing the hometown band, and if you catch them live at the Philharmonie, this list becomes a preview instead of homework.</div>
+
+    <div class="key-item">
+      <div class="key-item-title">Bach — Mass in B minor</div>
+      <div class="key-item-note">Karajan/BPO recorded it, though purists prefer period bands — try both.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Beethoven — Symphonies 3, 7, 9; "Emperor" Concerto</div>
+      <div class="key-item-note">Karajan's 1963 Beethoven cycle with the BPO is the classic entry point.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Schubert — <em>Schwanengesang</em></div>
+      <div class="key-item-note">Fischer-Dieskau with Brendel.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Schumann — <em>Kinderszenen</em></div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Wagner</div>
+      <div class="key-item-note">Tannhäuser Overture and Pilgrims' Chorus; Siegfried's Funeral March from Götterdämmerung; Prelude and Liebestod from Tristan; Lohengrin Act I Prelude. Karajan/BPO's Wagner orchestral excerpts album covers nearly all of these on one disc.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Brahms — Symphony No. 3 (third movement especially), Violin Concerto, Piano Quartet No. 1 in G minor</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Kurt Weill — "Mack the Knife" from <em>The Threepenny Opera</em></div>
+      <div class="key-item-note">Which premiered in 1928 at the Theater am Schiffbauerdamm — still standing, still a working theater. Walk past it. Also: <em>Alabama Song</em> covered by The Doors.</div>
+    </div>
+
+    <div class="key-item">
+      <div class="key-item-title">Present-day Berlin</div>
+      <div class="key-item-note">Radio Citizen, <em>Berlin Serengeti</em> ("The Hop" feat. Bajka) &nbsp;&middot;&nbsp; Superpitcher, "Country Boy" &nbsp;&middot;&nbsp; Tess Parks &amp; Anton Newcombe, "German Tangerine"</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const cats = {
+    hotel:    { label: 'Hotel',         color: '#0d9488' },
+    museum:   { label: 'Museums',       color: '#2563eb' },
+    history:  { label: 'History',       color: '#dc2626' },
+    landmark: { label: 'Landmarks',     color: '#d97706' },
+    music:    { label: 'Music & Opera', color: '#7c3aed' },
+    food:     { label: 'Food',          color: '#ea580c' },
+  };
+
+  const places = [
+    { name: 'Hotel Adlon Kempinski',          cat: 'hotel',    lat: 52.5166, lon: 13.3806, note: 'Unter den Linden 77 — steps from the Brandenburg Gate' },
+
+    { name: 'Pergamon Panorama',              cat: 'museum',   lat: 52.5213, lon: 13.3967, note: 'Am Kupfergraben 2 — 360° panorama of the Pergamon Altar; main museum building closed for renovation' },
+    { name: 'Altes Museum',                   cat: 'museum',   lat: 52.5197, lon: 13.3990, note: 'Am Lustgarten — ancient Greek and Roman art' },
+    { name: 'Neues Museum',                   cat: 'museum',   lat: 52.5205, lon: 13.3978, note: 'Bodestraße — Egyptian collection including the Nefertiti Bust' },
+    { name: 'Alte Nationalgalerie',           cat: 'museum',   lat: 52.5200, lon: 13.3993, note: 'Bodestraße — Caspar David Friedrich Romantic landscapes' },
+    { name: 'Deutsches Historisches Museum',  cat: 'museum',   lat: 52.5176, lon: 13.3993, note: 'Unter den Linden 2 — Pei Building has rotating exhibitions while main hall is under renovation' },
+    { name: 'Gemäldegalerie',                 cat: 'museum',   lat: 52.5074, lon: 13.3660, note: 'Matthäikirchplatz, Kulturforum — Old Masters: Holbein, Cranach the Elder' },
+    { name: 'Neue Nationalgalerie',           cat: 'museum',   lat: 52.5073, lon: 13.3641, note: 'Potsdamer Straße 50 — Mies van der Rohe building; Otto Dix and German Expressionists' },
+
+    { name: 'Bendlerblock',                   cat: 'history',  lat: 52.5079, lon: 13.3614, note: 'Stauffenbergstraße 13–14 — Memorial to German Resistance; site of Stauffenberg\'s execution, July 20, 1944' },
+    { name: 'Plötzensee Prison Memorial',     cat: 'history',  lat: 52.5411, lon: 13.3135, note: 'Hüttigpfad, northwest Berlin — memorial to thousands executed by the Nazi regime' },
+
+    { name: 'Kaiser Wilhelm Memorial Church', cat: 'landmark', lat: 52.5047, lon: 13.3354, note: 'Breitscheidplatz — bombed-out spire as anti-war memorial; modern blue-glass chapel hosts chamber music concerts' },
+    { name: 'Alexanderplatz',                 cat: 'landmark', lat: 52.5219, lon: 13.4132, note: 'Setting of Döblin\'s Berlin Alexanderplatz — a short walk from Museum Island' },
+    { name: 'Theater am Schiffbauerdamm',     cat: 'landmark', lat: 52.5208, lon: 13.3903, note: 'Schiffbauerdamm 40 — Threepenny Opera premiered here 1928; still a working theater' },
+    { name: 'Brandenburg Gate',               cat: 'landmark', lat: 52.5163, lon: 13.3777, note: 'Pariser Platz — right outside the Adlon' },
+
+    { name: 'Berlin Philharmonic',            cat: 'music',    lat: 52.5097, lon: 13.3677, note: 'Herbert-von-Karajan-Straße 1, Kulturforum — check the performance schedule' },
+    { name: 'Staatsoper Unter den Linden',    cat: 'music',    lat: 52.5163, lon: 13.3974, note: 'Unter den Linden 7 — Berlin\'s most historic opera house' },
+    { name: 'Deutsche Oper',                  cat: 'music',    lat: 52.5196, lon: 13.3177, note: 'Bismarckstraße 35, Charlottenburg' },
+    { name: 'Komische Oper',                  cat: 'music',    lat: 52.5159, lon: 13.3865, note: 'Behrenstraße 55–57 — known for innovative productions' },
+
+    { name: 'Kreuzberg — Turkish & Döner',    cat: 'food',     lat: 52.4997, lon: 13.3923, note: 'Döner Kebab country — the modern street-food form was popularized in Berlin' },
+  ];
+
+  const map = L.map('map').setView([52.5130, 13.3750], 13);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
+
+  const markers = {};
+  const activeFilters = new Set(Object.keys(cats));
+
+  places.forEach(p => {
+    const c = cats[p.cat];
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:14px;height:14px;background:${c.color};border:2.5px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+    const popup = L.popup({ offset: [0, -6], closeButton: false }).setContent(
+      `<div class="popup-name">${p.name}</div>` +
+      `<div class="popup-cat" style="color:${c.color}">${c.label}</div>` +
+      (p.note ? `<div class="popup-note">${p.note}</div>` : '')
+    );
+    const m = L.marker([p.lat, p.lon], { icon }).addTo(map).bindPopup(popup);
+    if (!markers[p.cat]) markers[p.cat] = [];
+    markers[p.cat].push(m);
+  });
+
+  const bar = document.getElementById('filters');
+  Object.entries(cats).forEach(([key, c]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn active';
+    btn.dataset.cat = key;
+    btn.innerHTML = `<span class="dot" style="background:${c.color}"></span>${c.label}`;
+    btn.style.borderColor = c.color + '55';
+    btn.addEventListener('click', () => {
+      if (activeFilters.has(key)) {
+        activeFilters.delete(key);
+        btn.classList.remove('active');
+        btn.classList.add('inactive');
+        markers[key]?.forEach(m => m.remove());
+      } else {
+        activeFilters.add(key);
+        btn.classList.add('active');
+        btn.classList.remove('inactive');
+        markers[key]?.forEach(m => m.addTo(map));
+      }
+    });
+    bar.appendChild(btn);
+  });
+</script>
+</body>
+</html>
