@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nights per City · Europe 2026</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: #f5f3ee;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 48px 24px 80px;
+    }
+
+    .container { max-width: 860px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 36px; }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: normal;
+      letter-spacing: 0.05em;
+    }
+    .subtitle {
+      margin-top: 6px;
+      font-size: 0.88rem;
+      color: #999;
+      font-style: italic;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e2ddd5;
+      border-radius: 14px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    #map { height: 580px; width: 100%; }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 10px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
+      font-family: 'Georgia', serif !important;
+      padding: 14px 16px !important;
+    }
+    .leaflet-popup-content { margin: 0 !important; }
+    .leaflet-popup-tip-container { display: none; }
+
+    .popup-city {
+      font-size: 1.05rem;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+    }
+    .popup-nights {
+      font-size: 0.82rem;
+      color: #888;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    .popup-stays {
+      font-size: 0.78rem;
+      color: #666;
+      line-height: 1.8;
+    }
+    .popup-stays span { display: block; }
+
+    .city-tip {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      font-family: 'Georgia', serif !important;
+      font-size: 0.8rem !important;
+      color: #444;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .city-tip::before { display: none !important; }
+
+    .leaflet-control-attribution { font-size: 10px !important; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Europe 2026</h1>
+    <p class="subtitle">71 nights &nbsp;·&nbsp; bubble area = nights in city &nbsp;·&nbsp; <span style="color:#dc2626">●</span> potential grad school</p>
+  </header>
+
+  <div class="card">
+    <div id="map"></div>
+  </div>
+
+</div>
+<script>
+  const cities = [
+    {
+      name: 'London',
+      color: '#3b3b3b',
+      lat: 51.5074, lng: -0.1278,
+      nights: 2,
+      stays: ['May 26 – May 28'],
+    },
+    {
+      name: 'Copenhagen',
+      color: '#e05c4b',
+      lat: 55.6761, lng: 12.5683,
+      nights: 36,
+      stays: ['May 28 – Jun 1', 'Jun 16 – Jun 29', 'Jul 6 – Jul 13', 'Jul 24 – Aug 4'],
+    },
+    {
+      name: 'Stockholm',
+      color: '#7c3aed',
+      lat: 59.3293, lng: 18.0686,
+      nights: 9,
+      stays: ['Jun 1 – Jun 6', 'Jun 12 – Jun 16'],
+    },
+    {
+      name: 'Helsinki',
+      color: '#2563eb',
+      lat: 60.1699, lng: 24.9384,
+      nights: 6,
+      stays: ['Jun 6 – Jun 12'],
+    },
+    {
+      name: 'Oslo',
+      color: '#059669',
+      lat: 59.9139, lng: 10.7522,
+      nights: 7,
+      stays: ['Jun 29 – Jul 6'],
+    },
+    {
+      name: 'Berlin',
+      color: '#6366f1',
+      lat: 52.5200, lng: 13.4050,
+      nights: 7,
+      stays: ['Jul 13 – Jul 20'],
+    },
+    {
+      name: 'Amsterdam',
+      color: '#f59e0b',
+      lat: 52.3676, lng: 4.9041,
+      nights: 4,
+      stays: ['Jul 20 – Jul 24'],
+    },
+  ];
+
+  const universities = [
+    {
+      city: 'Copenhagen',
+      lat: 55.6761, lng: 12.5683,
+      schools: ['KU – MSc Statistics', 'KU – MSc Mathematics-Economics', 'CBS – MSc Economics & Finance', 'CBS – MSc Business Admin & Data Science'],
+    },
+    {
+      city: 'Stockholm',
+      lat: 59.3293, lng: 18.0686,
+      schools: ['SSE – MSc Finance'],
+    },
+    {
+      city: 'Zurich',
+      lat: 47.3769, lng: 8.5417,
+      schools: ['ETH Zurich / UZH – MSc Quantitative Finance', 'HSG (St. Gallen) – MSc Finance / Quant Economics'],
+    },
+    {
+      city: 'Paris',
+      lat: 48.8566, lng: 2.3522,
+      schools: ['ESCP – Master in Finance', 'HEC Paris – Master in International Finance', 'ESSEC', 'EDHEC', 'Skema'],
+    },
+    {
+      city: 'Amsterdam',
+      lat: 52.3676, lng: 4.9041,
+      schools: ['UvA – MSc Finance', 'UvA – MSc Data Science'],
+    },
+    {
+      city: 'Tilburg',
+      lat: 51.5555, lng: 5.0913,
+      schools: ['Tilburg – MSc Finance (AI & Data Science track)'],
+    },
+    {
+      city: 'Berlin',
+      lat: 52.5200, lng: 13.4050,
+      schools: ['ESMT Berlin – Master in Management'],
+    },
+    {
+      city: 'London',
+      lat: 51.5074, lng: -0.1278,
+      schools: ['London Business School', 'Bayes Business School'],
+    },
+    {
+      city: 'Milan',
+      lat: 45.4642, lng: 9.1900,
+      schools: ['Bocconi – MSc Finance'],
+    },
+  ];
+
+  const map = L.map('map', {
+    center: [52, 10],
+    zoom: 4,
+    zoomSnap: 0.5,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors © <a href="https://carto.com">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+
+  const SCALE = 4.5;
+
+  cities.forEach(city => {
+    const radius = Math.sqrt(city.nights) * SCALE;
+    const nightWord = city.nights === 1 ? 'night' : 'nights';
+
+    const circle = L.circleMarker([city.lat, city.lng], {
+      radius,
+      fillColor: city.color,
+      fillOpacity: 0.72,
+      color: '#fff',
+      weight: 2,
+      opacity: 0.9,
+    }).addTo(map);
+
+    const staysHtml = city.stays.map(s => `<span>${s}</span>`).join('');
+
+    circle.bindPopup(`
+      <div class="popup-city" style="color:${city.color}">${city.name}</div>
+      <div class="popup-nights">${city.nights} ${nightWord}</div>
+      <div class="popup-stays">${staysHtml}</div>
+    `, { maxWidth: 220, closeButton: false });
+
+    circle.bindTooltip(`${city.name} · ${city.nights}n`, {
+      permanent: false,
+      direction: 'top',
+      offset: [0, -radius - 4],
+      className: 'city-tip',
+    });
+  });
+
+  const tripCityNames = new Set(cities.map(c => c.name));
+
+  universities.forEach(u => {
+    const isTripCity = tripCityNames.has(u.city);
+    const tripCity = cities.find(c => c.name === u.city);
+    const tripRadius = tripCity ? Math.sqrt(tripCity.nights) * SCALE : 0;
+
+    const marker = L.circleMarker([u.lat, u.lng], {
+      radius: isTripCity ? tripRadius + 4 : 4,
+      fillColor: isTripCity ? 'transparent' : '#dc2626',
+      fillOpacity: isTripCity ? 0 : 0.85,
+      color: '#dc2626',
+      weight: isTripCity ? 2.5 : 2,
+      opacity: 1,
+    }).addTo(map);
+
+    const schoolsHtml = u.schools.map(s => `<span>· ${s}</span>`).join('');
+
+    marker.bindPopup(`
+      <div class="popup-city" style="color:#dc2626">${u.city}</div>
+      <div class="popup-nights" style="color:#dc2626;margin-bottom:8px">Grad school options</div>
+      <div class="popup-stays">${schoolsHtml}</div>
+    `, { maxWidth: 260, closeButton: false });
+
+    marker.bindTooltip(u.city + (isTripCity ? '' : ' (grad school)'), {
+      permanent: false,
+      direction: 'top',
+      offset: [0, -(isTripCity ? tripRadius + 9 : 12)],
+      className: 'city-tip',
+    });
+  });
+</script>
+</body>
+</html>
