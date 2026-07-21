@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amsterdam · Jul 20</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: #f5f3ee;
+      color: #1a1a1a;
+    }
+
+    .header {
+      padding: 18px 28px 14px;
+      background: #fff;
+      border-bottom: 1px solid #e2ddd5;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .header h1 { font-size: 1.5rem; font-weight: normal; letter-spacing: 0.05em; }
+    .header .meta { font-size: 0.85rem; color: #999; font-style: italic; }
+    .header .notes { margin-left: auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.75rem; color: #aaa; letter-spacing: 0.02em; }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      padding: 10px 28px;
+      background: #faf9f6;
+      border-bottom: 1px solid #e2ddd5;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 20px; border: 1.5px solid transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.72rem; font-weight: 500; cursor: pointer;
+      transition: opacity 0.15s; background: #fff; color: #555; letter-spacing: 0.03em;
+    }
+    .filter-btn .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .filter-btn.active { color: #1a1a1a; }
+    .filter-btn.inactive { opacity: 0.4; }
+
+    #map { height: 520px; width: 100%; }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 8px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
+      border: 1px solid #e2ddd5 !important;
+    }
+    .leaflet-popup-content { margin: 12px 16px !important; font-family: 'Georgia', serif !important; }
+    .popup-name { font-size: 0.95rem; font-weight: bold; color: #1a1a1a; }
+    .popup-cat { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #aaa; margin-top: 2px; }
+    .popup-note { font-size: 0.82rem; color: #666; margin-top: 6px; font-style: italic; }
+    .leaflet-popup-tip { background: #fff !important; }
+
+    /* ── KEY ── */
+    .key {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 52px 28px 100px;
+    }
+
+    .key-section { margin-bottom: 44px; }
+
+    .key-section-title {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.64rem;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: #b0a898;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e4e0d8;
+    }
+
+    .key-entry {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid #eeebe4;
+    }
+    .key-entry:last-child { border-bottom: none; }
+
+    .key-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .key-content { flex: 1; }
+
+    .key-name {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #1a1a1a;
+      margin-bottom: 5px;
+    }
+
+    .key-note {
+      font-size: 0.84rem;
+      color: #666;
+      line-height: 1.7;
+      font-style: italic;
+    }
+    .key-note strong { font-style: normal; color: #444; font-weight: bold; }
+
+    .key-item {
+      padding: 14px 0;
+      border-bottom: 1px solid #eeebe4;
+    }
+    .key-item:last-child { border-bottom: none; }
+
+    .key-item-title {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .key-item-note {
+      font-size: 0.84rem;
+      color: #666;
+      line-height: 1.7;
+      font-style: italic;
+    }
+    .key-item-note strong { font-style: normal; color: #444; }
+
+    .key-subhead {
+      font-size: 0.78rem;
+      color: #999;
+      font-style: italic;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .key-warning {
+      font-size: 0.82rem;
+      color: #b45309;
+      font-style: italic;
+      line-height: 1.7;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Amsterdam</h1>
+  <span class="meta">Jul 20–23 &nbsp;&middot;&nbsp; 4 nights</span>
+  <span class="notes">Rosewood Amsterdam &nbsp;&middot;&nbsp; Prinsengracht 432–436</span>
+</div>
+
+<div class="filters" id="filters"></div>
+<div id="map"></div>
+
+<div class="key">
+
+  <!-- MUSEUMS -->
+  <div class="key-section">
+    <div class="key-section-title">Museums</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Rijksmuseum</div>
+        <div class="key-note">The national museum of the Netherlands. The undisputed centerpiece is <strong>Rembrandt's Night Watch</strong> — the largest painting in the building and one of the greatest in the world. Also houses Vermeer's <em>The Milkmaid</em> and <em>Woman Reading a Letter</em>. Book tickets in advance; queues are long without them.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Van Gogh Museum</div>
+        <div class="key-note">The largest collection of Van Gogh's work in the world — over 200 paintings and 500 drawings, displayed chronologically so you follow his arc from the dark Dutch period through the explosion of color in Arles and Saint-Rémy. <strong>Book in advance</strong> — this sells out weeks ahead in summer.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#2563eb"></div>
+      <div class="key-content">
+        <div class="key-name">Anne Frank House</div>
+        <div class="key-note">The <em>Achterhuis</em> — the secret annex where Anne Frank, her family, and four others hid from the Nazis for over two years. One of the most affecting places in Europe. <strong>Tickets must be booked online well in advance</strong> — walk-ins are nearly impossible. The house is left almost bare by design: no furniture, just the diary entries and the outline of the space.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LANDMARKS -->
+  <div class="key-section">
+    <div class="key-section-title">Landmarks &amp; City Center</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#d97706"></div>
+      <div class="key-content">
+        <div class="key-name">Amsterdam Canals</div>
+        <div class="key-note">The canal ring — <strong>Herengracht, Keizersgracht, Prinsengracht</strong> — is a UNESCO World Heritage Site, built in the Dutch Golden Age of the 17th century. Amsterdam has 165 canals and over 1,200 bridges. The best orientation is to walk the ring roads or take a boat.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#d97706"></div>
+      <div class="key-content">
+        <div class="key-name">Dam Square &amp; Royal Palace</div>
+        <div class="key-note">Dam Square is the historic heart of the city — built on the original dam across the Amstel River, giving Amsterdam its name. The <strong>Royal Palace</strong> on the square was built in 1648 as the city hall, the largest secular building in the Dutch Golden Age. It's open to visitors; the interior is striking.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#d97706"></div>
+      <div class="key-content">
+        <div class="key-name">Bloemenmarkt (Flower Market)</div>
+        <div class="key-note">The world's only floating flower market, on the Singel canal. The stalls are actually set on barges. Go for the spectacle of it — tulip bulbs, Dutch cheese, and an absurd density of tourists. Best in the morning.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#d97706"></div>
+      <div class="key-content">
+        <div class="key-name">A'dam Lookout</div>
+        <div class="key-note">Rooftop observation deck directly across the IJ from Centraal Station — free ferry takes 2 minutes. The view over Amsterdam's canal ring and the harbor is excellent. There's a swing that hangs over the edge if you're into that.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEIGHBORHOODS -->
+  <div class="key-section">
+    <div class="key-section-title">Neighborhoods</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#b45309"></div>
+      <div class="key-content">
+        <div class="key-name">Jordaan</div>
+        <div class="key-note">The most charming neighborhood in Amsterdam — a former working-class district, now full of independent galleries, small cafés, and brown cafes (<em>bruine kroegen</em>). Walk the narrow streets between Prinsengracht and Westerstraat. The Anne Frank House is on Prinsengracht at the Jordaan's edge.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#b45309"></div>
+      <div class="key-content">
+        <div class="key-name">De Pijp</div>
+        <div class="key-note">Amsterdam's most multicultural neighborhood, south of the canal ring. Dense with restaurants, bars, and the Albert Cuyp Market running down its spine. The neighborhood feels more local than the tourist center — good place to eat and wander in the evening.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#b45309"></div>
+      <div class="key-content">
+        <div class="key-name">Red Light District (De Wallen)</div>
+        <div class="key-note">Amsterdam's oldest neighborhood, east of Dam Square — medieval in layout, with canals, old churches, and the famous windows. Worth walking through for the history and the surreal atmosphere, especially during the day when it's less hectic. The <strong>Oude Kerk</strong> (Old Church, 1213) sits at its center.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARKS & MARKETS -->
+  <div class="key-section">
+    <div class="key-section-title">Parks &amp; Markets</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#059669"></div>
+      <div class="key-content">
+        <div class="key-name">Vondelpark</div>
+        <div class="key-note">Amsterdam's main park — 47 hectares, just southwest of the museum district. In summer the open-air theater (<em>Openluchttheater</em>) runs free concerts daily. A good place to decompress between museums; the Rijksmuseum and Van Gogh Museum are a 5-minute walk.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#059669"></div>
+      <div class="key-content">
+        <div class="key-name">Albert Cuyp Market</div>
+        <div class="key-note">Amsterdam's largest street market, running the full length of Albert Cuypstraat in De Pijp. Open daily except Sunday. Dutch street food — <strong>stroopwafels</strong> hot off the iron, raw herring (<em>haring</em>), <em>poffertjes</em> (mini pancakes). Also produce, cheese, clothing, and everything else.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#059669"></div>
+      <div class="key-content">
+        <div class="key-name">Keukenhof</div>
+        <div class="key-note">The world's largest flower garden — 32 hectares in Lisse, 35 km from Amsterdam.
+          <span class="key-warning">⚠ Open mid-March to mid-May only. You'll be in Amsterdam July 20–23 — it will be closed. Skip or save for another year.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITIES -->
+  <div class="key-section">
+    <div class="key-section-title">Activities</div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">Canal Cruise</div>
+        <div class="key-note">The best way to understand the canal ring is from water level. Boats depart from near Centraal Station and along the Damrak. A 1-hour loop covers the main ring canals and the harbor. Go in the evening for golden-hour light on the canal houses.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">Kalverstraat &amp; Rokin</div>
+        <div class="key-note">Amsterdam's main pedestrian shopping strip — Zara, UNIQLO, Weekday, H&amp;M and most high-street brands are here. Rokin runs parallel with more standalone stores. Busy but centrally located between Dam Square and Muntplein.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">PC Hooftstraat</div>
+        <div class="key-note">Amsterdam's luxury high street, one block from the Rijksmuseum. <strong>Hermès, Louis Vuitton, Gucci, Chanel, Bottega Veneta</strong> — the full lineup. Short street, walkable in 10 minutes, and the architecture of the canal houses they're housed in is worth seeing regardless.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">Magna Plaza</div>
+        <div class="key-note">A shopping mall inside a <strong>neo-Gothic former post office</strong> (1899), directly behind the Royal Palace on Dam Square. Worth going in just for the building — soaring arched interior, ornate ironwork. Mid-range brands inside, but the architecture is the reason to visit.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">De Bijenkorf</div>
+        <div class="key-note">Amsterdam's premier department store, on Dam Square. Six floors — beauty, fashion, homewares, a good food hall on the top floor. The best single-stop option if you want range without walking the whole city.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">Nine Streets (De 9 Straatjes)</div>
+        <div class="key-note">Nine short streets crossing the main canals in the Jordaan — independent boutiques, vintage shops, specialty stores. More interesting than Kalverstraat; better for browsing than buying.</div>
+      </div>
+    </div>
+
+    <div class="key-entry">
+      <div class="key-dot" style="background:#ea580c"></div>
+      <div class="key-content">
+        <div class="key-name">Johan Cruijff Arena</div>
+        <div class="key-note">Home of <strong>Ajax</strong>, in Amsterdam Zuidoost — about 20 minutes by metro from the center. Named after Johan Cruijff, the greatest Dutch footballer and one of the most influential players in football history. No match in July, but stadium tours run daily.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const cats = {
+    hotel:        { label: 'Hotel',            color: '#0d9488' },
+    museum:       { label: 'Museums',          color: '#2563eb' },
+    landmark:     { label: 'Landmarks',        color: '#d97706' },
+    neighborhood: { label: 'Neighborhoods',    color: '#b45309' },
+    park:         { label: 'Parks & Markets',  color: '#059669' },
+    activity:     { label: 'Activities',       color: '#ea580c' },
+  };
+
+  const places = [
+    // Hotel
+    { name: 'Rosewood Amsterdam', cat: 'hotel', lat: 52.3648, lon: 4.8838, note: 'Prinsengracht 432–436 — canal house hotel' },
+
+    // Museums
+    { name: 'Rijksmuseum',        cat: 'museum',       lat: 52.3600, lon: 4.8852, note: 'Museumstraat 1 — Night Watch, Vermeer; book in advance' },
+    { name: 'Van Gogh Museum',    cat: 'museum',       lat: 52.3584, lon: 4.8811, note: 'Museumplein 6 — largest Van Gogh collection in the world; book well in advance' },
+    { name: 'Anne Frank House',   cat: 'museum',       lat: 52.3752, lon: 4.8839, note: 'Prinsengracht 263-267 — the Achterhuis (secret annex); must book online in advance' },
+
+    // Landmarks
+    { name: 'Amsterdam Canals',   cat: 'landmark',     lat: 52.3680, lon: 4.8832, note: 'Herengracht, Keizersgracht, Prinsengracht — UNESCO World Heritage, 17th century canal ring' },
+    { name: 'Dam Square & Royal Palace', cat: 'landmark', lat: 52.3731, lon: 4.8932, note: 'Historic heart of Amsterdam — Royal Palace (1648) open to visitors' },
+    { name: 'Bloemenmarkt',       cat: 'landmark',     lat: 52.3669, lon: 4.8895, note: 'Singel canal — world\'s only floating flower market' },
+    { name: 'A\'dam Lookout',     cat: 'landmark',     lat: 52.3838, lon: 4.9009, note: 'Overhoeksplein 5, north of Centraal — rooftop observation deck; free IJ ferry from Centraal' },
+
+    // Neighborhoods
+    { name: 'Jordaan',            cat: 'neighborhood', lat: 52.3740, lon: 4.8790, note: 'West of Prinsengracht — Amsterdam\'s most charming neighborhood; galleries, brown cafés, narrow streets' },
+    { name: 'De Pijp',           cat: 'neighborhood', lat: 52.3543, lon: 4.8955, note: 'South of the canal ring — multicultural, dense with restaurants and bars' },
+    { name: 'Red Light District', cat: 'neighborhood', lat: 52.3738, lon: 4.8983, note: 'De Wallen — Amsterdam\'s oldest neighborhood; Oude Kerk (1213) at its center' },
+
+    // Parks & Markets
+    { name: 'Vondelpark',         cat: 'park',         lat: 52.3579, lon: 4.8686, note: '47-hectare park — free open-air concerts in summer; 5 min from Rijksmuseum' },
+    { name: 'Albert Cuyp Market', cat: 'park',         lat: 52.3547, lon: 4.8964, note: 'Albert Cuypstraat, De Pijp — largest street market in Amsterdam; stroopwafels, haring, poffertjes' },
+    { name: 'Keukenhof',          cat: 'park',         lat: 52.2697, lon: 4.5462, note: 'Lisse, 35 km from Amsterdam — world\'s largest flower garden. ⚠ Closed in July (open Mar–May only)' },
+
+    // Activities
+    { name: 'Canal Cruise',       cat: 'activity',     lat: 52.3773, lon: 4.8988, note: 'Departures near Centraal Station — best seen at golden hour; 1-hour loop of the canal ring' },
+    { name: 'Kalverstraat & Rokin',  cat: 'activity',  lat: 52.3710, lon: 4.8937, note: 'Main pedestrian shopping strip — Zara, UNIQLO, Weekday, H&M' },
+    { name: 'PC Hooftstraat',        cat: 'activity',  lat: 52.3601, lon: 4.8760, note: 'Luxury high street — Hermès, Louis Vuitton, Gucci, Chanel; one block from the Rijksmuseum' },
+    { name: 'Magna Plaza',           cat: 'activity',  lat: 52.3741, lon: 4.8906, note: 'Neo-Gothic former post office (1899) behind Royal Palace — mall worth visiting for the building alone' },
+    { name: 'De Bijenkorf',          cat: 'activity',  lat: 52.3731, lon: 4.8942, note: 'Dam Square — Amsterdam\'s best department store; six floors including a top-floor food hall' },
+    { name: 'Nine Streets',          cat: 'activity',  lat: 52.3698, lon: 4.8840, note: 'De 9 Straatjes — independent boutiques and vintage shops crossing the Jordaan canals' },
+    { name: 'Johan Cruijff Arena', cat: 'activity',    lat: 52.3143, lon: 4.9411, note: 'Arena Blvd 1, Zuidoost — home of Ajax; stadium tours run daily; no match in July' },
+  ];
+
+  const map = L.map('map').setView([52.3680, 4.8900], 14);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
+
+  const markers = {};
+  const activeFilters = new Set(Object.keys(cats));
+
+  places.forEach(p => {
+    const c = cats[p.cat];
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:14px;height:14px;background:${c.color};border:2.5px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+    const popup = L.popup({ offset: [0, -6], closeButton: false }).setContent(
+      `<div class="popup-name">${p.name}</div>` +
+      `<div class="popup-cat" style="color:${c.color}">${c.label}</div>` +
+      (p.note ? `<div class="popup-note">${p.note}</div>` : '')
+    );
+    const m = L.marker([p.lat, p.lon], { icon }).addTo(map).bindPopup(popup);
+    if (!markers[p.cat]) markers[p.cat] = [];
+    markers[p.cat].push(m);
+  });
+
+  const bar = document.getElementById('filters');
+  Object.entries(cats).forEach(([key, c]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn active';
+    btn.dataset.cat = key;
+    btn.innerHTML = `<span class="dot" style="background:${c.color}"></span>${c.label}`;
+    btn.style.borderColor = c.color + '55';
+    btn.addEventListener('click', () => {
+      if (activeFilters.has(key)) {
+        activeFilters.delete(key);
+        btn.classList.remove('active');
+        btn.classList.add('inactive');
+        markers[key]?.forEach(m => m.remove());
+      } else {
+        activeFilters.add(key);
+        btn.classList.add('active');
+        btn.classList.remove('inactive');
+        markers[key]?.forEach(m => m.addTo(map));
+      }
+    });
+    bar.appendChild(btn);
+  });
+</script>
+</body>
+</html>
